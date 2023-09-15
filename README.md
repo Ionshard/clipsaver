@@ -8,6 +8,16 @@ I like to use Cmd+Shift+4 on MacOS to screenshot a portion of my window, most of
 
 Additionally it was a good way to get started in Rust
 
+## Install
+
+Use [cargo-bininstall](https://github.com/cargo-bins/cargo-binstall/tree/main#cargo-binaryinstall)
+
+```bash
+cargo-binstall clipsaver
+```
+
 ## Usage
 
-**TODO**
+```bash
+clipsaver -d ~/Pictures/Screenshots
+```
