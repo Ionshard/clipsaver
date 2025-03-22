@@ -13,11 +13,11 @@ keywords = ["clipboard"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.0"
-arboard = "3.2.0"
-chrono = "0.4.23"
-clap = { version = "4.0", features = ["derive"] }
-clap-verbosity-flag = "2.0.0"
-image = "0.24.5"
-log = "0.4.17"
-simple_logger = "4.0.0"
+anyhow = "1.0.97"
+arboard = "3.4.1"
+chrono = "0.4.40"
+clap = { version = "4.5.32", features = ["derive"] }
+clap-verbosity-flag = "3.0.2"
+image = "0.25.5"
+log = "0.4.26"
+simple_logger = "5.0.0"
