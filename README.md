@@ -16,6 +16,12 @@ Use [cargo-bininstall](https://github.com/cargo-bins/cargo-binstall/tree/main#ca
 cargo-binstall clipsaver
 ```
 
+If you trust running generated shell scripts from 3rd party servers...
+
+```bash
+curl -fsSL https://bina.egoist.dev/Ionshard/clipsaver | sh
+```
+
 ## Usage
 
 ```bash
