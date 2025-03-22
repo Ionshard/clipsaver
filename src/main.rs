@@ -11,6 +11,7 @@ use std::path::PathBuf;
 struct Args {
     #[clap(flatten)]
     verbose: clap_verbosity_flag::Verbosity,
+
     #[arg(short, long)]
     directory: Option<PathBuf>,
 }
@@ -22,9 +23,13 @@ fn filename(directory: &PathBuf) -> PathBuf {
 }
 
 fn main() -> Result<()> {
-    simple_logger::init()?;
     let args = Args::parse();
+
+    simple_logger::init_with_level(args.verbose.log_level().expect("log level was parsed"))?;
+
+
     let mut clipboard = Clipboard::new()?;
+
     let image = clipboard.get_image()?;
     let img = RgbaImage::from_raw(
         image.width as u32,
@@ -32,9 +37,13 @@ fn main() -> Result<()> {
         image.bytes.to_vec(),
     )
     .context("Could not parse image")?;
+
     let directory = args.directory.unwrap_or(PathBuf::from("."));
     let file = filename(&directory);
+
     info!("Saving image to {}", file.display());
+
     img.save(file)?;
+
     Ok(())
 }
