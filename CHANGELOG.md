@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## v0.2.1
+
+Changes
+- Add Apple ARM to releases
+
 ## v0.2.0
 
 Changes
