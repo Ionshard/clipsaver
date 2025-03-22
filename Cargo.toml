@@ -13,7 +13,7 @@ keywords = ["clipboard"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0"
+anyhow = "1.0.0"
 arboard = "3.2.0"
 chrono = "0.4.23"
 clap = { version = "4.0", features = ["derive"] }
