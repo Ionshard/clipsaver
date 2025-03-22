@@ -6,7 +6,6 @@ use clap_verbosity_flag::Verbosity;
 use config::Config;
 use image::{ImageBuffer, Rgba, RgbaImage};
 use log::{debug, error, info, trace};
-use xdg::BaseDirectories;
 use std::{path::PathBuf, process};
 use serde::Deserialize;
 
@@ -33,8 +32,16 @@ fn setup_logging(verbose: Verbosity) -> Result<()> {
     Ok(())
 }
 
-fn get_config(xdg_dirs: &BaseDirectories) -> Result<AppConfig> {
-    let config_home = xdg_dirs.get_config_home();
+fn get_home_dir() -> Result<PathBuf> {
+    if let Some(dir) = dirs::config_dir() {
+        return Ok(dir);
+    }
+    Ok(std::env::current_dir()?)
+}
+
+fn get_config() -> Result<AppConfig> {
+
+    let config_home = get_home_dir()?.join("clipsaver");
     debug!("Looking for config in {:?}", config_home);
 
     let config_name = config_home.join("config");
@@ -51,16 +58,14 @@ fn get_config(xdg_dirs: &BaseDirectories) -> Result<AppConfig> {
     Ok(config)
 }
 
-fn get_save_directory(args: &Args, config: &AppConfig) -> PathBuf {
-    if let Some(directory) = &args.directory {
-        return directory.clone();
-    }
+fn get_save_directory(args: &Args, config: &AppConfig) -> Result<PathBuf> {
 
-    if let Some(directory) = &config.directory {
-        return directory.clone();
-    }
+    let save_directory = args.directory.clone().or_else(|| config.directory.clone()).unwrap_or(PathBuf::from("."));
 
-    return PathBuf::from(".")
+    let x = shellexpand::path::full(&save_directory)?;
+
+    return Ok(PathBuf::from(x));
+
 }
 
 fn get_image_from_clipboard() -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> {
@@ -99,12 +104,11 @@ fn clipsaver() -> Result<()> {
     let args = Args::parse();
     setup_logging(args.verbose)?;
 
-    trace!("Command Line Args: {:?}", args);    
+    trace!("Command Line: {:?}", args);    
 
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("clipsaver")?;
-    let config = get_config(&xdg_dirs)?;
+    let config = get_config()?;
 
-    let directory = get_save_directory(&args, &config);
+    let directory = get_save_directory(&args, &config)?;
 
     info!("Saving to directory: {:?}", directory);
 
