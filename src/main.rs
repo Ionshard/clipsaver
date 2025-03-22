@@ -6,7 +6,7 @@ use clap_verbosity_flag::Verbosity;
 use config::Config;
 use image::{ImageBuffer, Rgba, RgbaImage};
 use log::{debug, error, info, trace};
-use std::{path::PathBuf, process, env::current_dir};
+use std::{path::PathBuf, process, env::current_dir, fs};
 use serde::Deserialize;
 
 #[derive(Parser, Debug)]
@@ -17,6 +17,9 @@ struct Args {
 
     #[arg(short, long)]
     directory: Option<PathBuf>,
+
+    #[arg(long)]
+    save_directory: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize, PartialEq, Eq)]
@@ -32,19 +35,23 @@ fn setup_logging(verbose: Verbosity) -> Result<()> {
     Ok(())
 }
 
-fn get_home_dir() -> Result<PathBuf> {
+fn get_config_home() -> Result<PathBuf> {
     if let Some(dir) = dirs::config_dir() {
         return Ok(dir);
     }
     Ok(current_dir()?)
 }
 
+fn get_config_dir() -> Result<PathBuf> {
+    Ok(get_config_home()?.join("clipsaver"))
+}
+
 fn get_config() -> Result<AppConfig> {
 
-    let config_home = get_home_dir()?.join("clipsaver");
-    debug!("Looking for config in {:?}", config_home);
+    let config_dir = get_config_dir()?;
+    debug!("Looking for config in {:?}", config_dir);
 
-    let config_name = config_home.join("config");
+    let config_name = config_dir.join("config");
     let config_name = config_name.to_str().ok_or(anyhow!("Failed to parse {:?}", config_name))?;
 
     let config = Config::builder()
@@ -97,11 +104,29 @@ fn save_image_to_file(
     image.save(filename).context("Trying to save image")
 }
 
+fn save_directory(directory: String) -> Result<()> {
+    let config_dir = get_config_dir()?;
+    let filename = config_dir.join("config.ini");
+
+    debug!("Setting configuration in {:?}", filename);
+
+    fs::create_dir_all(config_dir)?;
+    fs::write(filename, format!("directory = {}", directory))?;
+
+    println!("Set save directory to {}", directory);
+
+    process::exit(0);
+}
+
 fn clipsaver() -> Result<PathBuf> {
     let args = Args::parse();
     setup_logging(args.verbose)?;
 
-    trace!("Command Line: {:?}", args);    
+    trace!("Command Line: {:?}", args);
+
+    if let Some(dir) = &args.save_directory {
+        save_directory(dir.clone())?
+    }
 
     let config = get_config()?;
 
