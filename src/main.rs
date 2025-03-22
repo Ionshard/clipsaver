@@ -6,7 +6,7 @@ use clap_verbosity_flag::Verbosity;
 use config::Config;
 use image::{ImageBuffer, Rgba, RgbaImage};
 use log::{debug, error, info, trace};
-use std::{path::PathBuf, process};
+use std::{path::PathBuf, process, env::current_dir};
 use serde::Deserialize;
 
 #[derive(Parser, Debug)]
@@ -36,7 +36,7 @@ fn get_home_dir() -> Result<PathBuf> {
     if let Some(dir) = dirs::config_dir() {
         return Ok(dir);
     }
-    Ok(std::env::current_dir()?)
+    Ok(current_dir()?)
 }
 
 fn get_config() -> Result<AppConfig> {
@@ -83,24 +83,21 @@ fn get_image_from_clipboard() -> Result<ImageBuffer<Rgba<u8>, Vec<u8>>> {
     .context("Could not parse image")
 }
 
-fn filename(directory: &PathBuf) -> PathBuf {
+fn get_save_filename(directory: &PathBuf) -> PathBuf {
     let now = Local::now();
     let filename = format!("Clipboard {}.png", now.format("%Y-%m-%d_%H.%M.%S"));
     directory.join(filename)
 }
 
-fn save_image_to_directory(
+fn save_image_to_file(
     image: ImageBuffer<Rgba<u8>, Vec<u8>>,
-    directory: &PathBuf,
+    filename: &PathBuf,
 ) -> Result<()> {
-    let file = filename(&directory);
-
-    info!("Saving image to {}", file.display());
-
-    image.save(file).context("Trying to save image")
+    info!("Saving image to {:?}", filename);
+    image.save(filename).context("Trying to save image")
 }
 
-fn clipsaver() -> Result<()> {
+fn clipsaver() -> Result<PathBuf> {
     let args = Args::parse();
     setup_logging(args.verbose)?;
 
@@ -112,13 +109,19 @@ fn clipsaver() -> Result<()> {
 
     info!("Saving to directory: {:?}", directory);
 
+    let filename = get_save_filename(&directory);
+
     let image = get_image_from_clipboard()?;
-    save_image_to_directory(image, &directory)
+    save_image_to_file(image, &filename)?;
+
+    Ok(filename)
 }
 
 fn main() {
-    clipsaver().unwrap_or_else(|error| {
+    let file = clipsaver().unwrap_or_else(|error| {
         error!("Failed to save clipboard: {:?}", error);
         process::exit(1);
-    })
+    });
+
+    println!("Saved image from clipboard to {:?}", file)
 }
